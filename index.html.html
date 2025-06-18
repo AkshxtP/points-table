@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cricket Points Table</title>
+  <style>
+    :root {
+      --bg-color: #111;
+      --text-color: #fff;
+      --table-bg: #222;
+      --header-bg: #333;
+      --border-color: #444;
+      --input-bg: #000;
+      --button-bg: #28a745;
+      --button-hover: #218838;
+    }
+
+    body.light {
+      --bg-color: #f4f4f4;
+      --text-color: #000;
+      --table-bg: #fff;
+      --header-bg: #ddd;
+      --border-color: #ccc;
+      --input-bg: #fff;
+      --button-bg: #007bff;
+      --button-hover: #0056b3;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: var(--table-bg);
+    }
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid var(--border-color);
+    }
+    th {
+      background-color: var(--header-bg);
+      cursor: pointer;
+    }
+    input[type="text"], input[type="number"] {
+      width: 100%;
+      background: var(--input-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      padding: 5px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: var(--button-bg);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: var(--button-hover);
+    }
+    .toggle-btn {
+      float: right;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <button class="toggle-btn" onclick="toggleMode()">Toggle Dark/Light Mode</button>
+  <h1>Points Table</h1>
+  <table id="pointsTable">
+    <thead>
+      <tr>
+        <th>S.No</th>
+        <th>Team Name</th>
+        <th>Matches Played</th>
+        <th>Won</th>
+        <th>Lost</th>
+        <th>Net Run Rate</th>
+        <th onclick="sortByPoints()">Points &#x25B2;&#x25BC;</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+    </tbody>
+  </table>
+
+  <h2>Add/Update Team</h2>
+  <div>
+    <input type="number" id="sno" placeholder="S.No" />
+    <input type="text" id="team" placeholder="Team Name" />
+    <input type="number" id="played" placeholder="Matches Played" />
+    <input type="number" id="won" placeholder="Won" />
+    <input type="number" id="lost" placeholder="Lost" />
+    <input type="text" id="nrr" placeholder="Net Run Rate" />
+    <input type="number" id="points" placeholder="Points" />
+    <button onclick="updateTable()">Add / Update</button>
+    <button onclick="clearTable()" style="background-color: #dc3545; margin-left: 10px;">Clear All</button>
+  </div>
+
+  <script>
+    const tableBody = document.getElementById("tableBody");
+
+    function loadTableFromStorage(sort = false) {
+      let data = JSON.parse(localStorage.getItem("pointsTableData")) || [];
+      if (sort) {
+        data.sort((a, b) => b.points - a.points);
+      }
+      tableBody.innerHTML = "";
+      data.forEach(team => {
+        const newRow = document.createElement("tr");
+        newRow.setAttribute("data-sno", team.sno);
+        newRow.innerHTML = `
+          <td>${team.sno}</td>
+          <td>${team.team}</td>
+          <td>${team.played}</td>
+          <td>${team.won}</td>
+          <td>${team.lost}</td>
+          <td>${team.nrr}</td>
+          <td>${team.points}</td>
+        `;
+        tableBody.appendChild(newRow);
+      });
+    }
+
+    function updateTable() {
+      const sno = document.getElementById("sno").value;
+      const team = document.getElementById("team").value;
+      const played = document.getElementById("played").value;
+      const won = document.getElementById("won").value;
+      const lost = document.getElementById("lost").value;
+      const nrr = document.getElementById("nrr").value;
+      const points = document.getElementById("points").value;
+
+      let data = JSON.parse(localStorage.getItem("pointsTableData")) || [];
+      const index = data.findIndex(entry => entry.sno == sno);
+
+      const teamData = { sno, team, played, won, lost, nrr, points };
+
+      if (index !== -1) {
+        data[index] = teamData;
+      } else {
+        data.push(teamData);
+      }
+
+      localStorage.setItem("pointsTableData", JSON.stringify(data));
+      loadTableFromStorage(true);
+
+      document.querySelectorAll("input").forEach(input => input.value = "");
+    }
+
+    function clearTable() {
+      if (confirm("Are you sure you want to clear the entire table?")) {
+        localStorage.removeItem("pointsTableData");
+        loadTableFromStorage();
+      }
+    }
+
+    function sortByPoints() {
+      loadTableFromStorage(true);
+    }
+
+    function toggleMode() {
+      document.body.classList.toggle("light");
+    }
+
+    window.onload = () => loadTableFromStorage(true);
+  </script>
+</body>
+</html>
